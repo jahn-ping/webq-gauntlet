@@ -1,0 +1,26 @@
+{
+  "name": "webq-gauntlet-engine",
+  "version": "2.0.0",
+  "description": "Multi-AI orchestration engine with Gauntlet Loop methodology",
+  "type": "module",
+  "scripts": {
+    "start": "node query.mjs",
+    "launch": "node launch.mjs",
+    "test": "node query.mjs --mode code --json --auto-context \"Write a hello world function\""
+  },
+  "dependencies": {
+    "ioredis": "^5.11.1",
+    "ip-address": "^10.5.0",
+    "playwright": "^1.45.0",
+    "sanitize-html": "^2.17.7",
+    "zod": "^4.4.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.2.0",
+    "@types/sanitize-html": "^2.16.1",
+    "typescript": "^7.0.2"
+  }
+}

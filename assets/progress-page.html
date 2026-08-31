@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gauntlet Progress</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 20px; background: #0d1117; color: #e6edf3; line-height: 1.6; }
+    .container { max-width: 900px; margin: 0 auto; }
+    h1 { color: #f0f6fc; border-bottom: 1px solid #30363d; padding-bottom: 10px; }
+    .meta { color: #8b949e; margin-bottom: 20px; }
+    .bar-box { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 16px; margin-bottom: 20px; white-space: pre-wrap; font-family: monospace; font-size: 13px; overflow-x: auto; }
+    .round { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+    .round-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .round-title { font-weight: 600; color: #f0f6fc; }
+    .round-num { background: #238636; color: white; padding: 2px 8px; border-radius: 4px; font-size: 12px; }
+    .site { border-left: 3px solid #30363d; padding-left: 12px; margin: 12px 0; }
+    .site-header { display: flex; justify-content: space-between; margin-bottom: 8px; }
+    .site-name { font-weight: 500; color: #f0f6fc; }
+    .site-status { font-size: 12px; padding: 2px 6px; border-radius: 3px; }
+    .status-ok { background: #238636; color: white; }
+    .status-err { background: #da3633; color: white; }
+    .status-skip { background: #d29922; color: black; }
+    .site-content { background: #0d1117; border: 1px solid #21262d; border-radius: 4px; padding: 12px; white-space: pre-wrap; font-family: monospace; font-size: 12px; max-height: 400px; overflow: auto; }
+    .status-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #161b22; border-top: 1px solid #30363d; padding: 8px 20px; display: flex; justify-content: space-between; font-size: 13px; color: #8b949e; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Gauntlet Progress</h1>
+    <div class="meta" id="meta">Loading…</div>
+    <div class="bar-box" id="bar">No quality bar set</div>
+    <div id="rounds"></div>
+  </div>
+  <div class="status-bar">
+    <span id="status">Initializing…</span>
+    <span id="round-info"></span>
+  </div>
+  <script>
+    async function load() {
+      try {
+        // Try to load from results.json in engine folder
+        const res = await fetch('engine/results.json');
+        if (!res.ok) throw new Error('No results.json');
+        const data = await res.json();
+        render(data);
+      } catch (e) {
+        document.getElementById('meta').textContent = 'Run webq-gauntlet with --json to generate results.json';
+        document.getElementById('status').textContent = 'No data';
+      }
+    }
+    function render(data) {
+      document.getElementById('meta').innerHTML = `<strong>Question:</strong> ${escapeHtml(data.question)}<br>
+        <strong>Mode:</strong> ${data.mode} | <strong>Context:</strong> ${data.contextSource || 'none'} |
+        <strong>Rounds:</strong> ${data.finalRound} | <strong>Time:</strong> ${data.timestamp}`;
+      document.getElementById('bar').textContent = data.bar || 'No quality bar set';
+      const roundsDiv = document.getElementById('rounds');
+      roundsDiv.innerHTML = '';
+      data.round1 = data.round1 || [];
+      data.round2 = data.round2 || [];
+      const allRounds = [data.round1, data.round2];
+      for (let i = 2; i < data.finalRound; i++) {
+        allRounds.push(data[`round${i + 1}`] || []);
+      }
+      allRounds.forEach((round, idx) => {
+        const n = idx + 1;
+        const div = document.createElement('div');
+        div.className = 'round';
+        div.innerHTML = `<div class="round-header"><span class="round-title">${n === 1 ? 'Round 1 — Independent Answers' : `Round ${n} — Cross-Reference Improvement`}</span><span class="round-num">R${n}</span></div>`;
+        round.forEach(r => {
+          const siteDiv = document.createElement('div');
+          siteDiv.className = 'site';
+          const status = r.error ? 'err' : r.skipped ? 'skip' : 'ok';
+          const statusText = r.error ? `Error: ${r.error}` : r.skipped ? `Skipped: ${r.skipped}` : `${(r.response || '').length} chars`;
+          siteDiv.innerHTML = `<div class="site-header"><span class="site-name">${escapeHtml(r.site)}</span><span class="site-status status-${status}">${statusText}</span></div><div class="site-content">${escapeHtml(r.response || r.error || r.skipped || '')}</div>`;
+          div.appendChild(siteDiv);
+        });
+        roundsDiv.appendChild(div);
+      });
+      document.getElementById('status').textContent = `Round ${data.finalRound} complete — ${allRounds[data.finalRound - 1]?.filter(r => !r.error && !r.skipped).length || 0} sites answered`;
+      document.getElementById('round-info').textContent = `Final: ${data.final?.filter(r => !r.error && !r.skipped).length || 0} valid`;
+    }
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+    load();
+    setInterval(load, 5000);
+  </script>
+</body>
+</html>

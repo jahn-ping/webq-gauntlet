@@ -1,0 +1,43 @@
+# ===== NEVER COMMIT: personal / sensitive =====
+# Chromium profile — contains login session cookies for ChatGPT/Claude/Gemini/DeepSeek
+engine/browser-data-pool/
+engine/browser-data/
+engine/.webq-cdp-lock.json
+
+# Screenshots show logged-in account identity
+*.png
+
+# Crash dumps
+*.dmp
+
+# Local audit/plans notes (contain personal info)
+plans/
+
+# ===== Personal research context (use --write-context to regenerate on new PC) =====
+context.md
+context-*.md
+context/
+debug1.md
+plan-popup-rate-limit.md
+engine/history/
+
+# ===== Runtime outputs & logs =====
+engine/*.log
+engine/run-status.txt
+engine/answer-live.txt
+engine/results.json
+engine/results.md
+engine/final-result.md
+engine/*-response.txt
+engine/r2-*.txt
+engine/synthesis-prompt.txt
+
+# ===== Dependencies & debris =====
+node_modules/
+*.backup
+*.patch
+
+# OS junk
+Thumbs.db
+Desktop.ini
+.DS_Store
